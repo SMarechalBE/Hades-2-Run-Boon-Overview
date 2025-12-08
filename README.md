@@ -1,15 +1,22 @@
-# Mod name
+# Run Boon Overview – Hades II Mod
 
-Hades II mod allowing to do some super duper thing.
+This mod aggregates all currently available boons during a run under Melinoe Codex page as if it were any Boon offering page.
+The intent is to help planning future boon purchases based on the god pool. It was also created with the idea to lessen the number of manipulations required to retrieve such an information.  
 
-## Features
+## Dependency - Improved Boon Info UI
 
-- Wow.
-- Much cool.
-  - Very doge.
+**Improved Boon Info UI** is used a a dependency, reusing the boon state categories defined there. 
 
-## Install
+## Future updates
 
-- Do this.
-- Do that.
-  - Nope, not that.
+- Add the possibility to choose the coloring to apply to categories
+- Perhaps a fifth category (both requiring keepsake AND sacrifice)
+
+## Compatibility
+
+- Should be safe with all mods that don't interact with Boon info listing.
+- Language independant
+
+## Feedback
+
+Any feedback is welcome

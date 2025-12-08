@@ -3,15 +3,15 @@ schemaVersion = "0.0.1"
 
 
 [package]
-namespace = "AuthorName"
-name = "ModName"
-versionNumber = "0.0.1"
-description = "Allows to do some super duper thing."
-websiteUrl = "https://github.com/AuthorName/ModName"
+namespace = "SMarBe"
+name = "Run_Boon_Overview"
+versionNumber = "0.1.0"
+description = "Aggregates into Melinoe Codex page all currently available boons during a run"
+websiteUrl = "https://github.com/SMarechalBE/Hades-2-Run-Boon-Overview"
 containsNsfwContent = false
 
 [package.dependencies]
-Hell2Modding-Hell2Modding = "1.0.70"
+Hell2Modding-Hell2Modding = "1.0.87"
 LuaENVY-ENVY = "1.2.0"
 SGG_Modding-Chalk = "2.1.1"
 SGG_Modding-ReLoad = "1.0.2"
@@ -35,12 +35,6 @@ target = "./LICENSE"
 [[build.copy]]
 source = "./src"
 target = "./plugins"
-
-# Uncomment (remove the #) the three lines below if you have any files to copy to the plugins_data folder (like custom .pkg files)
-# [[build.copy]]
-# source = "./data"
-# target = "./plugins_data"
-
 
 [publish]
 repository = "https://thunderstore.io"
