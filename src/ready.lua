@@ -2,74 +2,227 @@
 -- globals we define are private to our plugin!
 ---@diagnostic disable: lowercase-global
 
--- here is where your mod sets up all the things it will do.
--- this file will not be reloaded if it changes during gameplay
--- 	so you will most likely want to have it reference
---	values and functions later defined in `reload.lua`.
 
--- These are some sample code snippets of what you can do with our modding framework:
-local file = rom.path.combine(rom.paths.Content, 'Game/Text/en/ShellText.en.sjson')
-sjson.hook(file, function(data)
-	return sjson_ShellText(data)
+--[[
+	`BoonInfoPopulateTraits` is called from `ShowBoonInfoScreen` it is responsible for populating the `screen.TraitList` content. 
+	`ShowBoonInfoScreen` gets called from 2 sources:
+		1. During an "Upgrade Choice" screen
+		2. From the Codex on its respective data
+	
+	We're hooking on the BoonInfoPopulateTraits call and populating the data with the boons available to our run
+
+	TODO:
+		- Add Forget-me-not boons to the list
+		- Remove NPC types boons from the list
+
+]]--
+modutil.mod.Path.Wrap("BoonInfoPopulateTraits", function(base, screen)
+	if screen.LootName == "PlayerUnit" then
+		SetCurrentRunTraitList(screen)
+	else
+		base(screen)
+	end
 end)
 
-modutil.mod.Path.Wrap("SetupMap", function(base, ...)
-	prefix_SetupMap()
-	return base(...)
-end)
+-- Forces the Boon button to appear for Melinoe
+ScreenData.BoonInfo.TraitDictionary["PlayerUnit"] = {}
 
-game.OnControlPressed({'Gift', function()
-	return trigger_Gift()
-end})
+--[[
+	Hard coded ordering for the Olympian boons, by type then by God
+	  Type:
+	    1. Slot
+		  a. Weapon
+		  b. Special
+		  c. Cast
+		  d. Sprint
+		  e. Mana
+		2. Non-slot
+	    3. Infusion
+		4. Legendary
+		5. Duos
+]]--
+mod.TraitOrder = {
+	-- Slots
 
+	-- Weapon
+	"ZeusWeaponBoon",
+	"HeraWeaponBoon",
+	"PoseidonWeaponBoon",
+	"DemeterWeaponBoon",
+	"ApolloWeaponBoon",
+	"AphroditeWeaponBoon",
+	"HephaestusWeaponBoon",
+	"HestiaWeaponBoon",
+	"AresWeaponBoon", 
 
--- Everything below this line is part of the example mod creation guide,
--- which you can find on our wiki, replacing Schelemeus portrait:
--- https://sgg-modding.github.io/Hades2ModWiki/docs/category/creating-your-first-mod
--- Note that the custom .pkg files are not included in the template, and you will
--- need to create them yourself if you want to follow the tutorial.
+	-- Special
+	"ZeusSpecialBoon",
+	"HeraSpecialBoon",
+	"PoseidonSpecialBoon",
+	"DemeterSpecialBoon",
+	"ApolloSpecialBoon",
+	"AphroditeSpecialBoon",
+	"HephaestusSpecialBoon",
+	"HestiaSpecialBoon",
+	"AresSpecialBoon", 
 
------------------------------------------------------------
---------------- Step 1: Loading the package ---------------
------------------------------------------------------------
+	-- Cast
+	"ZeusCastBoon",
+	"HeraCastBoon",
+	"PoseidonCastBoon",
+	"DemeterCastBoon",
+	"ApolloCastBoon",
+	"AphroditeCastBoon",
+	"HephaestusCastBoon",
+	"HestiaCastBoon",
+	"AresCastBoon", 
 
-------- Method 1: Calling the package load function when entering the Hub_PreRun room
--- modutil.mod.Path.Wrap("DeathAreaRoomTransition", function(base, source, args)
---   if game.CurrentHubRoom.Name == "Hub_PreRun" then
---     mod.LoadSkellyPackage()
---     end
---   base(source, args)
--- end)
+	-- Sprint
+	"ZeusSprintBoon",
+	"HeraSprintBoon",
+	"PoseidonSprintBoon",
+	"DemeterSprintBoon",
+	"ApolloSprintBoon",
+	"AphroditeSprintBoon",
+	"HephaestusSprintBoon",
+	"HestiaSprintBoon",
+	"AresSprintBoon", 
 
+	-- Mana
+	"ZeusManaBoon",
+	"HeraManaBoon",
+	"PoseidonManaBoon",
+	"DemeterManaBoon",
+	"ApolloManaBoon",
+	"AphroditeManaBoon",
+	"HephaestusManaBoon",
+	"HestiaManaBoon",
+	"AresManaBoon",
 
-------- Method 2: Adding the package load function to the Schelemeus setup events
--- local loadSkellyPackageCall = { FunctionName = _PLUGIN.guid .. ".LoadSkellyPackage" }
--- table.insert(game.EnemyData.NPC_Skelly_01.SetupEvents, loadSkellyPackageCall)
+	-- Non-Slot
+	"ZeusManaBoltBoon",
+	"BoltRetaliateBoon",
+	"CastAnywhereBoon",
+	"FocusLightningBoon",
+	"DoubleBoltBoon",
+	"EchoExpirationBoon",
+	"LightningDebuffGeneratorBoon",
+	"DamageShareRetaliateBoon",
+	"LinkedDeathDamageBoon",
+	"BoonDecayBoon",
+	"DamageSharePotencyBoon",
+	"SpawnCastDamageBoon",
+	"CommonGlobalDamageBoon",
+	"OmegaHeraProjectileBoon",
+	"EncounterStartOffenseBuffBoon",
+	"RoomRewardBonusBoon",
+	"FocusDamageShaveBoon",
+	"DoubleRewardBoon",
+	"PoseidonStatusBoon",
+	"PoseidonExCastBoon",
+	"OmegaPoseidonProjectileBoon",
+	"CastNovaBoon",
+	"PlantHealthBoon",
+	"BoonGrowthBoon",
+	"ReserveManaHitShieldBoon",
+	"SlowExAttackBoon",
+	"CastAttachBoon",
+	"RootDurationBoon",
+	"ApolloRetaliateBoon",
+	"PerfectDamageBonusBoon",
+	"BlindChanceBoon",
+	"ApolloBlindBoon",
+	"ApolloExCastBoon",
+	"ApolloCastAreaBoon",
+	"DoubleStrikeChanceBoon",
+	"HighHealthOffenseBoon",
+	"HealthRewardBonusBoon",
+	"DoorHealToFullBoon",
+	"WeakPotencyBoon",
+	"WeakVulnerabilityBoon",
+	"ManaBurstBoon",
+	"FocusRawDamageBoon",
+	"MassiveDamageBoon",
+	"AntiArmorBoon",
+	"HeavyArmorBoon",
+	"ArmorBoon",
+	"EncounterStartDefenseBuffBoon",
+	"ManaToHealthBoon",
+	"MassiveKnockupBoon",
+	"OmegaZeroBurnBoon",
+	"CastProjectileBoon",
+	"FireballManaSpecialBoon",
+	"BurnExplodeBoon",
+	"BurnArmorBoon",
+	"BurnStackBoon",
+	"AloneDamageBoon",
+	"AresExCastBoon",
+	"RendBloodDropBoon",
+	"AresStatusDoubleDamageBoon",
+	"BloodDropRevengeBoon",
+	"MissingHealthCritBoon",
+	"LowHealthLifestealBoon",
+	"OmegaDelayedDamageBoon",
 
+	-- Elemental
+	"ElementalDamageFloorBoon",
+	"ElementalRarityUpgradeBoon",
+	"ElementalHealthBoon",
+	"ElementalDamageCapBoon",
+	"ElementalRallyBoon",
+	"ElementalDodgeBoon",
+	"ElementalDamageBoon",
+	"ElementalBaseDamageBoon",
+	"ElementalOlympianDamageBoon",
 
-------- Method 3: Adding the package to the list of packages loaded whenever Schelemeus is spawned
-local customPortraitsPackageName = _PLUGIN.guid .. "Portraits"
-table.insert(game.EnemyData.NPC_Skelly_01.LoadPackages, customPortraitsPackageName)
+	-- Legendary
+	"SpawnKillBoon",
+	"AllElementalBoon",
+	"AmplifyConeBoon",
+	"InstantRootKill",
+	"DoubleExManaBoon",
+	"RandomStatusBoon",
+	"WeaponUpgradeBoon",
+	"BurnSprintBoon",
+	"DoubleBloodDropBoon",
 
-
------------------------------------------------------------
------------ Step 2: Modifying the portrait path -----------
------------------------------------------------------------
-
--- All packages built by `deppth2 hpk` will have the package name as part of all file paths, to prevent mods from clashing
--- If you added any nested folders in your package, include them here as well
-local newPortraitFilePath = _PLUGIN.guid .. "Portraits\\Portraits_Skelly_01"
-
--- rom.path.combine is provided by Hell2Modding to build file paths correctly across different operating systems
--- rom.paths.Content() will return the path to the Content folder of the current Hades II installation
-local guiPortraitsVFXFile = rom.path.combine(rom.paths.Content(), "Game\\Animations\\GUI_Portraits_VFX.sjson")
-
-sjson.hook(guiPortraitsVFXFile, function(data)
-  for _, entry in ipairs(data.Animations) do
-    if entry.Name == "Portrait_Skelly_Default_01" or entry.Name == "Portrait_Skelly_Default_01_Exit" then
-      entry.FilePath = newPortraitFilePath
-			entry.CreateAnimations = {}
-			entry.OffsetY = 0
-    end
-  end
-end)
+	-- Duos
+	"SuperSacrificeBoonZeus",
+	"LightningVulnerabilityBoon",
+	"RootStrikeBoon",
+	"ApolloSecondStageCastBoon",
+	"SprintEchoBoon",
+	"EchoBurnBoon",
+	"ReboundingSparkBoon",
+	"AutoRevengeBoon",
+	"SuperSacrificeBoonHera",
+	"MoneyDamageBoon",
+	"KeepsakeLevelBoon",
+	"RaiseDeadBoon",
+	"ManaRestoreDamageBoon",
+	"CharmCrowdBoon",
+	"ManaShieldBoon",
+	"BloodRetentionBoon",
+	"GoodStuffBoon",
+	"PoseidonSplashSprintBoon",
+	"AllCloseBoon",
+	"SteamBoon",
+	"MassiveCastBoon",
+	"DoubleSplashBoon",
+	"StormSpawnBoon",
+	"MaxHealthDamageBoon",
+	"BurnConsumeBoon",
+	"ClearRootBoon",
+	"SelfCastBoon",
+	"ManaBurstCountBoon",
+	"CoverRegenerationBoon",
+	"BlindClearBoon",
+	"DoubleSwordBoon",
+	"BurnRefreshBoon",
+	"SlamManaBurstBoon",
+	"BloodManaBurstBoon",
+	"DoubleMassiveAttackBoon",
+	"RapidSwordBoon",
+	"ManaRestoreDamageBoon",
+	"FireballRendBoon",
+}
