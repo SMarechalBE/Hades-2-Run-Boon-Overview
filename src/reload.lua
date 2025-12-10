@@ -6,13 +6,16 @@
 ---@param traitList table
 ---@return table
 function GetGodPoolBoons(traitList)
-	local godPool = OrderedKeysToList( CurrentRun.LootTypeHistory )
+	if not traitList or not game.LootData then return traitList end
+
+	local godPool = game.GetInteractedGodsThisRun()
+	if not godPool then return traitList end
+
 	for _, god in ipairs(godPool) do
 		if boonInfo.IsSlotGiver(god) then
-			local godData = LootData[god]
-			if godData ~= nil then
+			local godData = game.LootData[god]
+			if godData then
 				for traitName, _ in pairs(godData.TraitIndex) do
-					modutil.mod.Print(traitName)
 					table.insert(traitList, traitName)
 				end
 			end
@@ -27,27 +30,14 @@ end
 ---@return table
 function Reorder(traitList)
 	table.sort(traitList, function (traitA, traitB)
-		local foundA = false
-		local foundB = false
-		local indexA = 1000
-		local indexB = 1000
-		for index, traitName in ipairs(mod.TraitOrder) do
-			if not foundA and traitName == traitA then
-				foundA = true
-				indexA = index
-			end
-			
-			if not foundB and traitName == traitB then
-				foundB = true
-				indexB = index
-			end
-			
-			if(foundA and foundB) then
-				break
+		for _, traitName in ipairs(mod.TraitOrder) do
+			if traitName == traitA then
+				return true -- traitA < traitB
+			elseif traitName == traitB then
+				return false -- traitA > traitB
 			end
 		end
-
-		return indexA < indexB
+		return true -- We shouldn't get here
 	end)
 
 	return traitList
@@ -76,7 +66,7 @@ function RemoveUnavailableBoons(traitList)
 	local filteredList = {}
 	for _, traitName in ipairs(traitList) do
 		local state = boonInfo.GetBoonState(traitName)
-		if state == boonInfo.BoonState.Available then
+		if state == boonInfo.BoonState.Available or state == boonInfo.BoonState.Unfulfilled then
 			table.insert(filteredList, traitName)
 		end
 	end
