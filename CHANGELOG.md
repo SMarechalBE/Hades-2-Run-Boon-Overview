@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Melinoe button appearing at all times, even when no run was ongoing. Now it will only appear during a run, after a god boon has been picked. 
+
 ## [0.1.0] - 2025-12-09
 
 ### Added

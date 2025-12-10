@@ -124,3 +124,23 @@ function BoonInfoPopulateTraits_SetCurrentRunTraitList(screen)
 	screen.TraitList = Reorder(screen.TraitList)
 	screen.TraitList = EnsureNotEmptyBoonList(screen.TraitList)
 end
+
+---Wraps OpenCodexScreen: Add or remove traitDictionary["PlayerUnit"] (which controls boon offering button)
+function OpenCodexScreen_UpdateMelinoeBoonOfferingButton()
+	local traitDictionary = game.ScreenData and game.ScreenData.BoonInfo and game.ScreenData.BoonInfo.TraitDictionary
+	if not traitDictionary then return end
+
+	if not game.CurrentHubRoom then
+		if traitDictionary["PlayerUnit"] then return end -- Avoid unnecessary checks
+
+		local godPool = game.GetInteractedGodsThisRun()
+		for _, god in ipairs(godPool) do
+			if boonInfo.IsSlotGiver(god) then
+				traitDictionary["PlayerUnit"] = {} -- Add button
+				return
+			end
+		end
+	end
+
+	if traitDictionary["PlayerUnit"] then traitDictionary["PlayerUnit"] = nil end -- Remove button
+end
