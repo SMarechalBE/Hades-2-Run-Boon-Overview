@@ -2,7 +2,7 @@
 -- globals we define are private to our plugin!
 ---@diagnostic disable: lowercase-global
 
----TODO
+---Retrieve all boons from "slot" gods encountered this run.
 ---@param traitList table
 ---@return table
 function GetGodPoolBoons(traitList)
@@ -22,7 +22,7 @@ function GetGodPoolBoons(traitList)
 	return traitList
 end
 
----TODO
+---Reorder the traitList using TraitOrder
 ---@param traitList table
 ---@return table
 function Reorder(traitList)
@@ -68,7 +68,8 @@ function EnsureNotEmptyBoonList(traitList)
 	return traitList
 end
 
----TODO
+--- Filter out boons using the selected filtering method
+--- TODO: Add filtering configurations, perhaps with buttons push
 ---@param traitList table
 ---@return table
 function RemoveUnavailableBoons(traitList)
@@ -83,14 +84,17 @@ function RemoveUnavailableBoons(traitList)
 	return filteredList
 end
 
----TODO
+---TODO: Add pinned boons to the list
 ---@param traitList table
 ---@return table
 function AddPinnedBoons(traitList)
 	return traitList
 end
 
----TODO
+---Dedupe traitList table
+---TODO: perhaps it is not actually useful to dedupe, and we should instead build
+---		 a lookup table directly with other functions. Meaning this would only convert
+---		 it into a list instead.
 ---@param traitList table
 ---@return table
 function Dedupe(traitList)
@@ -109,9 +113,9 @@ function Dedupe(traitList)
 	return dedupedList
 end
 
----TODO
+---Wraps BoonInfoPopulateTraits: Constructs the boon info list for Melinoe
 ---@param screen table
-function SetCurrentRunTraitList(screen)
+function BoonInfoPopulateTraits_SetCurrentRunTraitList(screen)
 	screen.TraitList = {}
 	screen.TraitList = GetGodPoolBoons(screen.TraitList)
 	screen.TraitList = RemoveUnavailableBoons(screen.TraitList)

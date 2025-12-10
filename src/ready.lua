@@ -3,22 +3,17 @@
 ---@diagnostic disable: lowercase-global
 
 
---[[
-	`BoonInfoPopulateTraits` is called from `ShowBoonInfoScreen` it is responsible for populating the `screen.TraitList` content. 
-	`ShowBoonInfoScreen` gets called from 2 sources:
-		1. During an "Upgrade Choice" screen
-		2. From the Codex on its respective data
-	
-	We're hooking on the BoonInfoPopulateTraits call and populating the data with the boons available to our run
-
-	TODO:
-		- Add Forget-me-not boons to the list
-		- Remove NPC types boons from the list
-
-]]--
+---`BoonInfoPopulateTraits` is called from `ShowBoonInfoScreen` it is responsible for populating the `screen.TraitList` content.<br>
+---`ShowBoonInfoScreen` gets called from 2 sources:<br>
+---	 1. During an "Upgrade Choice" screen<br>
+---  2. From the Codex on its respective data<br>
+---We're hooking on the BoonInfoPopulateTraits call and populating the data with the boons available to our run<br>
+---TODO: Add Forget-me-not boons to the list<br>
+---@param base any
+---@param screen any
 modutil.mod.Path.Wrap("BoonInfoPopulateTraits", function(base, screen)
-	if screen.LootName == "PlayerUnit" then
-		SetCurrentRunTraitList(screen)
+	if screen and screen.LootName == "PlayerUnit" then
+		BoonInfoPopulateTraits_SetCurrentRunTraitList(screen)
 	else
 		base(screen)
 	end
