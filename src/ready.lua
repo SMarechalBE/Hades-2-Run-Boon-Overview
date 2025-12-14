@@ -32,9 +32,6 @@ modutil.mod.Path.Wrap("OpenCodexScreen", function(base)
 	base()
 end)
 
--- Forces the Boon button to appear for Melinoe
-
-
 --[[
 	Hard coded ordering for the Olympian boons, by type then by God
 	  Type:

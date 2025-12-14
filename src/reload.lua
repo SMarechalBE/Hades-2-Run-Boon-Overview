@@ -13,7 +13,7 @@ function GetGodPoolBoons(traitList)
 
 	for _, god in ipairs(godPool) do
 		local godData = game.LootData[god]
-		if godData and godData.GodLoot then
+		if godData and godData.GodLoot and godData.TraitIndex then
 			for traitName, _ in pairs(godData.TraitIndex) do
 				table.insert(traitList, traitName)
 			end
