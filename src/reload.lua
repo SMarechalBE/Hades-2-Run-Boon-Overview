@@ -12,12 +12,10 @@ function GetGodPoolBoons(traitList)
 	if not godPool then return traitList end
 
 	for _, god in ipairs(godPool) do
-		if boonInfo.IsSlotGiver(god) then
-			local godData = game.LootData[god]
-			if godData then
-				for traitName, _ in pairs(godData.TraitIndex) do
-					table.insert(traitList, traitName)
-				end
+		local godData = game.LootData[god]
+		if godData and godData.GodLoot then
+			for traitName, _ in pairs(godData.TraitIndex) do
+				table.insert(traitList, traitName)
 			end
 		end
 	end
@@ -58,22 +56,6 @@ function EnsureNotEmptyBoonList(traitList)
 	return traitList
 end
 
---- Filter out boons using the selected filtering method
---- TODO: Add filtering configurations, perhaps with buttons push
----@param traitList table
----@return table
-function RemoveUnavailableBoons(traitList)
-	local filteredList = {}
-	for _, traitName in ipairs(traitList) do
-		local state = boonInfo.GetBoonState(traitName)
-		if state == boonInfo.BoonState.Available or state == boonInfo.BoonState.Unfulfilled then
-			table.insert(filteredList, traitName)
-		end
-	end
-
-	return filteredList
-end
-
 ---TODO: Add pinned boons to the list
 ---@param traitList table
 ---@return table
@@ -108,7 +90,6 @@ end
 function BoonInfoPopulateTraits_SetCurrentRunTraitList(screen)
 	screen.TraitList = {}
 	screen.TraitList = GetGodPoolBoons(screen.TraitList)
-	screen.TraitList = RemoveUnavailableBoons(screen.TraitList)
 	screen.TraitList = AddPinnedBoons(screen.TraitList)
 	screen.TraitList = Dedupe(screen.TraitList)
 	screen.TraitList = Reorder(screen.TraitList)
@@ -125,7 +106,8 @@ function OpenCodexScreen_UpdateMelinoeBoonOfferingButton()
 
 		local godPool = game.GetInteractedGodsThisRun()
 		for _, god in ipairs(godPool) do
-			if boonInfo.IsSlotGiver(god) then
+			local godData = game.LootData[god]
+			if godData and godData.GodLoot then
 				traitDictionary["PlayerUnit"] = {} -- Add button
 				return
 			end
