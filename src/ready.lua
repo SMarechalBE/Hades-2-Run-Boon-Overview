@@ -48,6 +48,15 @@ end)
 	    3. Infusion
 		4. Legendary
 		5. Duos
+	
+	TODO: Can be deduced from:
+	  - LootData.WeaponUpgrades (merged in god order 1-1-1-1, 2-2-2-2, ...)
+	  - Other traits deduced from not in below
+	  - GameData.AllElementalBoons
+	  - GameData.AllLegendaryBoons
+	  - GameData.AllDuoBoons
+
+	  - Ordering could be computed from: [god order X boon order]
 ]]--
 mod.TraitOrder = {
 	-- Slots
