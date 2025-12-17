@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Improved Boon Info UI is not a dependency anymore, even though it makes little sense to use this mod by itself
+
 ### Changed
 
 - Removed direct use of Improved Boon Info UI since filtering will be provided there directly

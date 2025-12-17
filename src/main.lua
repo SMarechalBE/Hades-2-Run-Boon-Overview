@@ -33,9 +33,6 @@ chalk = mods["SGG_Modding-Chalk"]
 ---@module 'SGG_Modding-ReLoad'
 reload = mods['SGG_Modding-ReLoad']
 
----@module 'SMarBe-Improved_Boon_Info_UI'
-boonInfo = mods["SMarBe-Improved_Boon_Info_UI"]
-
 ---@module 'config'
 config = chalk.auto 'config.lua'
 -- ^ this updates our `.cfg` file in the config folder!
