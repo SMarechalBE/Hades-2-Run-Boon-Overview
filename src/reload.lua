@@ -85,7 +85,7 @@ function Dedupe(traitList)
 	return dedupedList
 end
 
----Wraps BoonInfoPopulateTraits: Constructs the boon info list for Melinoe
+---Called inside BoonInfoPopulateTraits override: Constructs the boon info list for Melinoe
 ---@param screen table
 function BoonInfoPopulateTraits_SetCurrentRunTraitList(screen)
 	screen.TraitList = {}

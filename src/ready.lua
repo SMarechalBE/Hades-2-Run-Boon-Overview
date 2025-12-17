@@ -11,12 +11,34 @@
 ---TODO: Add Forget-me-not boons to the list<br>
 ---@param base any
 ---@param screen any
-modutil.mod.Path.Wrap("BoonInfoPopulateTraits", function(base, screen)
-	if screen and screen.LootName == "PlayerUnit" then
-		BoonInfoPopulateTraits_SetCurrentRunTraitList(screen)
-	else
-		base(screen)
+modutil.mod.Path.Override("BoonInfoPopulateTraits", function(screen)
+
+	DebugAssert({ Condition = screen.TraitSortOrder[screen.LootName] ~= nil, Text = screen.LootName.." doesn't have a defined trait sort order", Owner = "Caleb" })
+
+	screen.TraitList = {}
+
+	local codexWeaponName = nil
+	if screen.LootName == "WeaponUpgrade" then
+		if screen.CodexScreen ~= nil then
+			codexWeaponName = screen.CodexScreen.OpenEntryName
+		else
+			codexWeaponName = GetEquippedWeapon()
+		end
+		-- Override start
+	elseif screen.LootName == "PlayerUnit" then
+		return BoonInfoPopulateTraits_SetCurrentRunTraitList(screen)
+		-- Override end
 	end
+
+	for i, traitName in ipairs( screen.TraitSortOrder[screen.LootName] ) do
+		local traitData = TraitData[traitName]
+		if traitData ~= nil and ( not traitData.CodexWeapon or traitData.CodexWeapon == codexWeaponName ) and ( traitData.CodexGameStateRequirements == nil or IsGameStateEligible( traitData, traitData.CodexGameStateRequirements ) ) then
+			table.insert( screen.TraitList, traitName )
+		elseif ConsumableData[traitName] ~= nil then
+			table.insert( screen.TraitList, traitName )
+		end
+	end
+
 end)
 
 ---Add or remove empty PlayerUnit (Melinoe) entry in the TraitDictionary when Codex is opened.<br>
