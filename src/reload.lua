@@ -105,12 +105,9 @@ function OpenCodexScreen_UpdateMelinoeBoonOfferingButton()
 		if traitDictionary["PlayerUnit"] then return end -- Avoid unnecessary checks
 
 		local godPool = game.GetInteractedGodsThisRun()
-		for _, god in ipairs(godPool) do
-			local godData = game.LootData[god]
-			if godData and godData.GodLoot then
-				traitDictionary["PlayerUnit"] = {} -- Add button
-				return
-			end
+		if game.TableLength(godPool) > 0 then
+			traitDictionary["PlayerUnit"] = {}
+			return
 		end
 	end
 
