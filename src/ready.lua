@@ -73,10 +73,26 @@ end)
 
 --Wrap StartRoom to always set Melinoe Chapter and Entry as default when entering a new room
 modutil.mod.Path.Wrap("StartRoom", function (base, ...)
-	modutil.mod.Print("Wrapping StartRoom")
 	SetDefaultCodexChapter()
 	SetDefaultCodexEntry()
 	return base(...)
+end)
+
+--Wrap AttemptOpenUpgradeChoiceBoonInfo to open Melinoe's page instead of current god when elligible 
+modutil.mod.Path.Wrap("AttemptOpenUpgradeChoiceBoonInfo", function (base, screen, button)
+	if config.openMelinoeBoonInfoInsteadOfGodDuringOffering then
+		local originalSourceName = screen.Source.Name
+		if game.LootData[originalSourceName] and game.LootData[originalSourceName].GodLoot then
+			screen.Source.Name = Melinoe.LootName
+
+			local returnValue = base(screen, button)
+			screen.Source.Name = originalSourceName
+
+			return returnValue
+		end
+	end
+
+	return base(screen, button)
 end)
 
 --[[
