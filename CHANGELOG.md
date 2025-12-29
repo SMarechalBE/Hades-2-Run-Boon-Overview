@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Improved behaviour when opening codex to seamlessly default on Melinoe's page without impacting current game's behaviour
+- Configurable behaviour that opens Melinoe's Boon Info page instead of the current god during an offering. Defaults to true.
 
 ### Fixed
 
