@@ -101,15 +101,10 @@ function OpenCodexScreen_UpdateMelinoeBoonOfferingButton()
 	local traitDictionary = game.ScreenData and game.ScreenData.BoonInfo and game.ScreenData.BoonInfo.TraitDictionary
 	if not traitDictionary then return end
 
-	if not game.CurrentHubRoom then
-		if traitDictionary["PlayerUnit"] then return end -- Avoid unnecessary checks
-
-		local godPool = game.GetInteractedGodsThisRun()
-		if game.TableLength(godPool) > 0 then
-			traitDictionary["PlayerUnit"] = {}
-			return
-		end
+	if not game.CurrentHubRoom -- We are in a run
+	   and game.TableLength(game.GetInteractedGodsThisRun()) > 0 then -- Gods were interacted with this run
+		traitDictionary["PlayerUnit"] = {}
+	else -- Otherwise, make sure button is removed
+		traitDictionary["PlayerUnit"] = nil
 	end
-
-	if traitDictionary["PlayerUnit"] then traitDictionary["PlayerUnit"] = nil end -- Remove button
 end
