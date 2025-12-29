@@ -54,6 +54,31 @@ modutil.mod.Path.Wrap("OpenCodexScreen", function(base)
 	base()
 end)
 
+---Wrap SelectNearbyUnlockedEntry and set Melinoe as default codex entry for chtonic gods only if
+---the base function has made any change and new chapter isn't chtonic gods.
+---Note: Maybe the logic is convoluted and we should simply always default back to Melinoe ?
+modutil.mod.Path.Wrap("SelectNearbyUnlockedEntry", function (base, ...)
+	local beforeSelectedChapter, beforeSelectedEntry = GetSelectedCodexElements()
+	local returnValue = base(...)
+
+	local afterSelectedChapter, afterSelectedEntry = GetSelectedCodexElements()
+	if beforeSelectedChapter ~= afterSelectedChapter or beforeSelectedEntry ~= afterSelectedEntry then
+		if afterSelectedChapter ~= Melinoe.CodexChapter then
+			SetDefaultCodexEntry()
+		end
+	end
+
+	return returnValue
+end)
+
+--Wrap StartRoom to always set Melinoe Chapter and Entry as default when entering a new room
+modutil.mod.Path.Wrap("StartRoom", function (base, ...)
+	modutil.mod.Print("Wrapping StartRoom")
+	SetDefaultCodexChapter()
+	SetDefaultCodexEntry()
+	return base(...)
+end)
+
 --[[
 	Hard coded ordering for the Olympian boons, by type then by God
 	  Type:

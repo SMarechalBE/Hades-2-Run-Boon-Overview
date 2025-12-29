@@ -2,6 +2,12 @@
 -- globals we define are private to our plugin!
 ---@diagnostic disable: lowercase-global
 
+Melinoe =
+{
+	LootName = "PlayerUnit",
+	CodexChapter = "ChthonicGods"
+}
+
 ---Retrieve all boons from "slot" gods encountered this run.
 ---@param traitList table
 ---@return table
@@ -103,8 +109,44 @@ function OpenCodexScreen_UpdateMelinoeBoonOfferingButton()
 
 	if not game.CurrentHubRoom -- We are in a run
 	   and game.TableLength(game.GetInteractedGodsThisRun()) > 0 then -- Gods were interacted with this run
-		traitDictionary["PlayerUnit"] = {}
+		traitDictionary[Melinoe.LootName] = {}
 	else -- Otherwise, make sure button is removed
-		traitDictionary["PlayerUnit"] = nil
+		traitDictionary[Melinoe.LootName] = nil
 	end
 end
+
+---Set Chtronic gods chapter as selected
+function SetDefaultCodexChapter()
+	if not game.CodexStatus.Enabled then
+		return
+	end
+
+	game.CodexStatus.SelectedChapterName = Melinoe.CodexChapter
+end
+
+---Set Melinoe entry as selected entry in Chtonic gods chapter
+function SetDefaultCodexEntry()
+	if not game.CodexStatus.Enabled then
+		return
+	end
+
+	if game.CodexStatus.SelectedEntryNames == nil then
+		game.CodexStatus.SelectedEntryNames = {}
+	end
+	game.CodexStatus.SelectedEntryNames[Melinoe.CodexChapter] = Melinoe.LootName
+end
+
+---Retrieve selected codex chapter and entry
+---@return string selectedChapterName Chapter name
+---@return string selectedEntryName Entry name
+function GetSelectedCodexElements()
+	local selectedChapterName = game.CodexStatus.SelectedChapterName
+	local selectedEntryName = game.CodexStatus.SelectedEntryNames and game.CodexStatus.SelectedEntryNames[selectedChapterName] or ""
+	return selectedChapterName, selectedEntryName
+end
+
+-- Melinoe is already the default entry in codex,
+-- Let's make sure the selected entry in Chtonic gods resets back to Melinoe:
+--  - On room change, and select the chtonic gods chapter as well
+--  - Before SelectCodexEntry() calls
+
