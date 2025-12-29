@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Improved behaviour when opening codex to seamlessly default on Melinoe's page without impacting current game's behaviour
+
 ### Fixed
 
 - Boons can now be tracked inside Melinoe's page
