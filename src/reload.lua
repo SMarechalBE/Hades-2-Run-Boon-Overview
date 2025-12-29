@@ -144,9 +144,3 @@ function GetSelectedCodexElements()
 	local selectedEntryName = game.CodexStatus.SelectedEntryNames and game.CodexStatus.SelectedEntryNames[selectedChapterName] or ""
 	return selectedChapterName, selectedEntryName
 end
-
--- Melinoe is already the default entry in codex,
--- Let's make sure the selected entry in Chtonic gods resets back to Melinoe:
---  - On room change, and select the chtonic gods chapter as well
---  - Before SelectCodexEntry() calls
-
