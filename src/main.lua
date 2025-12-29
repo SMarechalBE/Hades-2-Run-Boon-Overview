@@ -43,6 +43,9 @@ local function on_ready()
 	if config.enabled == false then return end
 	mod = modutil.mod.Mod.Register(_PLUGIN.guid)
 
+	-- Enable Boon pinning from Melinoe BoonInfo page
+	game.CodexData.ChthonicGods.Entries.PlayerUnit["BoonInfoAllowPinning"] = true
+
 	import 'ready.lua'
 end
 
