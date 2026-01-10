@@ -18,15 +18,10 @@ modutil.mod.Path.Wrap("BoonInfoPopulateTraits", function(base, screen)
 end)
 
 
----Add or remove empty PlayerUnit (Melinoe) entry in the TraitDictionary when Codex is opened.<br>
----Note: this entry controls the appearance of the Boon offering button.<br>
----We start by checking if we're currently not inside a HubRoom, it is mandatory to check this<br>
----because `game.CurrentRoom` keeps all its data from the previous run for some reason.<br>
----Then we can safely check the gods encountered during the run. If any "slot" god appeared,<br>
----the button can safely appear.
-modutil.mod.Path.Wrap("OpenCodexScreen", function(base)
+--Compute whether we should show or not the BoonOfferingButton for Melinoe
+modutil.mod.Path.Wrap("UpdateCodexContextualAction", function(base, ...)
 	UpdateCodexMelinoeBoonOfferingButton()
-	return base()
+	return base(...)
 end)
 
 ---Wrap SelectNearbyUnlockedEntry and set Melinoe as default codex entry for chtonic gods only if
