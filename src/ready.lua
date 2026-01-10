@@ -3,43 +3,20 @@
 ---@diagnostic disable: lowercase-global
 
 
----`BoonInfoPopulateTraits` is called from `ShowBoonInfoScreen` it is responsible for populating the `screen.TraitList` content.<br>
----`ShowBoonInfoScreen` gets called from 2 sources:<br>
----	 1. During an "Upgrade Choice" screen<br>
----  2. From the Codex on its respective data<br>
----We're hooking on the BoonInfoPopulateTraits call and populating the data with the boons available to our run<br>
----TODO: Add Forget-me-not boons to the list<br>
----@param base any
----@param screen any
-modutil.mod.Path.Override("BoonInfoPopulateTraits", function(screen)
-
-	DebugAssert({ Condition = screen.TraitSortOrder[screen.LootName] ~= nil, Text = screen.LootName.." doesn't have a defined trait sort order", Owner = "Caleb" })
-
-	screen.TraitList = {}
-
-	local codexWeaponName = nil
-	if screen.LootName == "WeaponUpgrade" then
-		if screen.CodexScreen ~= nil then
-			codexWeaponName = screen.CodexScreen.OpenEntryName
-		else
-			codexWeaponName = GetEquippedWeapon()
-		end
-		-- Override start
-	elseif screen.LootName == "PlayerUnit" then
-		return BoonInfoPopulateTraits_SetCurrentRunTraitList(screen)
-		-- Override end
+---`BoonInfoPopulateTraits` is called from `ShowBoonInfoScreen` it is responsible for populating the `screen.TraitList` content
+---It uses screen.TraitSortOrder to populate screen.TraitList, so we hijack the value first then restore it afterwards to not leave crumbles
+modutil.mod.Path.Wrap("BoonInfoPopulateTraits", function(base, screen)
+	if screen.LootName ~= Melinoe.LootName then
+		return base(screen)
 	end
 
-	for i, traitName in ipairs( screen.TraitSortOrder[screen.LootName] ) do
-		local traitData = TraitData[traitName]
-		if traitData ~= nil and ( not traitData.CodexWeapon or traitData.CodexWeapon == codexWeaponName ) and ( traitData.CodexGameStateRequirements == nil or IsGameStateEligible( traitData, traitData.CodexGameStateRequirements ) ) then
-			table.insert( screen.TraitList, traitName )
-		elseif ConsumableData[traitName] ~= nil then
-			table.insert( screen.TraitList, traitName )
-		end
-	end
+	screen.TraitSortOrder[Melinoe.LootName] = GetMelinoeTraits()
+	local returnValue = base(screen)
+	screen.TraitSortOrder[Melinoe.LootName] = nil
 
+	return returnValue
 end)
+
 
 ---Add or remove empty PlayerUnit (Melinoe) entry in the TraitDictionary when Codex is opened.<br>
 ---Note: this entry controls the appearance of the Boon offering button.<br>
@@ -47,16 +24,13 @@ end)
 ---because `game.CurrentRoom` keeps all its data from the previous run for some reason.<br>
 ---Then we can safely check the gods encountered during the run. If any "slot" god appeared,<br>
 ---the button can safely appear.
----TODO: make the button appear if there are pinned boons.
----@param base any
 modutil.mod.Path.Wrap("OpenCodexScreen", function(base)
-	OpenCodexScreen_UpdateMelinoeBoonOfferingButton()
-	base()
+	UpdateCodexMelinoeBoonOfferingButton()
+	return base()
 end)
 
 ---Wrap SelectNearbyUnlockedEntry and set Melinoe as default codex entry for chtonic gods only if
 ---the base function has made any change and new chapter isn't chtonic gods.
----Note: Maybe the logic is convoluted and we should simply always default back to Melinoe ?
 modutil.mod.Path.Wrap("SelectNearbyUnlockedEntry", function (base, ...)
 	local beforeSelectedChapter, beforeSelectedEntry = GetSelectedCodexElements()
 	local returnValue = base(...)
@@ -71,235 +45,32 @@ modutil.mod.Path.Wrap("SelectNearbyUnlockedEntry", function (base, ...)
 	return returnValue
 end)
 
---Wrap StartRoom to always set Melinoe Chapter and Entry as default when entering a new room
+--Always set Melinoe Chapter and Entry as default in the Codex when entering a new room
 modutil.mod.Path.Wrap("StartRoom", function (base, ...)
 	SetDefaultCodexChapter()
 	SetDefaultCodexEntry()
 	return base(...)
 end)
 
---Wrap AttemptOpenUpgradeChoiceBoonInfo to open Melinoe's page instead of current god when elligible 
+--When opening Codex Boon Info from offering page, force Melinoe's page instead only if the config flag is set
 modutil.mod.Path.Wrap("AttemptOpenUpgradeChoiceBoonInfo", function (base, screen, button)
-	if config.openMelinoeBoonInfoInsteadOfGodDuringOffering then
-		local originalSourceName = screen.Source.Name
-		if game.LootData[originalSourceName] and game.LootData[originalSourceName].GodLoot then
-			screen.Source.Name = Melinoe.LootName
-
-			local returnValue = base(screen, button)
-			screen.Source.Name = originalSourceName
-
-			return returnValue
-		end
+	if not config.openMelinoeBoonInfoInsteadOfGodDuringOffering then 
+		return base(screen, button) 
+	end
+	
+	local originalSourceName = screen and screen.Source and screen.Source.Name
+	if not originalSourceName then
+		return base(screen, button)
+	end
+	
+	local sourceData = game.LootData and game.LootData[originalSourceName]
+	if not sourceData or not sourceData.GodLoot then
+		return base(screen, button)
 	end
 
-	return base(screen, button)
+	screen.Source.Name = Melinoe.LootName
+	local returnValue = base(screen, button)
+	screen.Source.Name = originalSourceName
+
+	return returnValue
 end)
-
---[[
-	Hard coded ordering for the Olympian boons, by type then by God
-	  Type:
-	    1. Slot
-		  a. Weapon
-		  b. Special
-		  c. Cast
-		  d. Sprint
-		  e. Mana
-		2. Non-slot
-	    3. Infusion
-		4. Legendary
-		5. Duos
-	
-	TODO: Can be deduced from:
-	  - LootData.WeaponUpgrades (merged in god order 1-1-1-1, 2-2-2-2, ...)
-	  - Other traits deduced from not in below
-	  - GameData.AllElementalBoons
-	  - GameData.AllLegendaryBoons
-	  - GameData.AllDuoBoons
-
-	  - Ordering could be computed from: [god order X boon order]
-]]--
-mod.TraitOrder = {
-	-- Slots
-
-	-- Weapon
-	"ZeusWeaponBoon",
-	"HeraWeaponBoon",
-	"PoseidonWeaponBoon",
-	"DemeterWeaponBoon",
-	"ApolloWeaponBoon",
-	"AphroditeWeaponBoon",
-	"HephaestusWeaponBoon",
-	"HestiaWeaponBoon",
-	"AresWeaponBoon", 
-
-	-- Special
-	"ZeusSpecialBoon",
-	"HeraSpecialBoon",
-	"PoseidonSpecialBoon",
-	"DemeterSpecialBoon",
-	"ApolloSpecialBoon",
-	"AphroditeSpecialBoon",
-	"HephaestusSpecialBoon",
-	"HestiaSpecialBoon",
-	"AresSpecialBoon", 
-
-	-- Cast
-	"ZeusCastBoon",
-	"HeraCastBoon",
-	"PoseidonCastBoon",
-	"DemeterCastBoon",
-	"ApolloCastBoon",
-	"AphroditeCastBoon",
-	"HephaestusCastBoon",
-	"HestiaCastBoon",
-	"AresCastBoon", 
-
-	-- Sprint
-	"ZeusSprintBoon",
-	"HeraSprintBoon",
-	"PoseidonSprintBoon",
-	"DemeterSprintBoon",
-	"ApolloSprintBoon",
-	"AphroditeSprintBoon",
-	"HephaestusSprintBoon",
-	"HestiaSprintBoon",
-	"AresSprintBoon", 
-
-	-- Mana
-	"ZeusManaBoon",
-	"HeraManaBoon",
-	"PoseidonManaBoon",
-	"DemeterManaBoon",
-	"ApolloManaBoon",
-	"AphroditeManaBoon",
-	"HephaestusManaBoon",
-	"HestiaManaBoon",
-	"AresManaBoon",
-
-	-- Non-Slot
-	"ZeusManaBoltBoon",
-	"BoltRetaliateBoon",
-	"CastAnywhereBoon",
-	"FocusLightningBoon",
-	"DoubleBoltBoon",
-	"EchoExpirationBoon",
-	"LightningDebuffGeneratorBoon",
-	"DamageShareRetaliateBoon",
-	"LinkedDeathDamageBoon",
-	"BoonDecayBoon",
-	"DamageSharePotencyBoon",
-	"SpawnCastDamageBoon",
-	"CommonGlobalDamageBoon",
-	"OmegaHeraProjectileBoon",
-	"EncounterStartOffenseBuffBoon",
-	"RoomRewardBonusBoon",
-	"FocusDamageShaveBoon",
-	"DoubleRewardBoon",
-	"PoseidonStatusBoon",
-	"PoseidonExCastBoon",
-	"OmegaPoseidonProjectileBoon",
-	"CastNovaBoon",
-	"PlantHealthBoon",
-	"BoonGrowthBoon",
-	"ReserveManaHitShieldBoon",
-	"SlowExAttackBoon",
-	"CastAttachBoon",
-	"RootDurationBoon",
-	"ApolloRetaliateBoon",
-	"PerfectDamageBonusBoon",
-	"BlindChanceBoon",
-	"ApolloBlindBoon",
-	"ApolloExCastBoon",
-	"ApolloCastAreaBoon",
-	"DoubleStrikeChanceBoon",
-	"HighHealthOffenseBoon",
-	"HealthRewardBonusBoon",
-	"DoorHealToFullBoon",
-	"WeakPotencyBoon",
-	"WeakVulnerabilityBoon",
-	"ManaBurstBoon",
-	"FocusRawDamageBoon",
-	"MassiveDamageBoon",
-	"AntiArmorBoon",
-	"HeavyArmorBoon",
-	"ArmorBoon",
-	"EncounterStartDefenseBuffBoon",
-	"ManaToHealthBoon",
-	"MassiveKnockupBoon",
-	"OmegaZeroBurnBoon",
-	"CastProjectileBoon",
-	"FireballManaSpecialBoon",
-	"BurnExplodeBoon",
-	"BurnArmorBoon",
-	"BurnStackBoon",
-	"AloneDamageBoon",
-	"AresExCastBoon",
-	"RendBloodDropBoon",
-	"AresStatusDoubleDamageBoon",
-	"BloodDropRevengeBoon",
-	"MissingHealthCritBoon",
-	"LowHealthLifestealBoon",
-	"OmegaDelayedDamageBoon",
-
-	-- Elemental
-	"ElementalDamageFloorBoon",
-	"ElementalRarityUpgradeBoon",
-	"ElementalHealthBoon",
-	"ElementalDamageCapBoon",
-	"ElementalRallyBoon",
-	"ElementalDodgeBoon",
-	"ElementalDamageBoon",
-	"ElementalBaseDamageBoon",
-	"ElementalOlympianDamageBoon",
-
-	-- Legendary
-	"SpawnKillBoon",
-	"AllElementalBoon",
-	"AmplifyConeBoon",
-	"InstantRootKill",
-	"DoubleExManaBoon",
-	"RandomStatusBoon",
-	"WeaponUpgradeBoon",
-	"BurnSprintBoon",
-	"DoubleBloodDropBoon",
-
-	-- Duos
-	"SuperSacrificeBoonZeus",
-	"LightningVulnerabilityBoon",
-	"RootStrikeBoon",
-	"ApolloSecondStageCastBoon",
-	"SprintEchoBoon",
-	"EchoBurnBoon",
-	"ReboundingSparkBoon",
-	"AutoRevengeBoon",
-	"SuperSacrificeBoonHera",
-	"MoneyDamageBoon",
-	"KeepsakeLevelBoon",
-	"RaiseDeadBoon",
-	"ManaRestoreDamageBoon",
-	"CharmCrowdBoon",
-	"ManaShieldBoon",
-	"BloodRetentionBoon",
-	"GoodStuffBoon",
-	"PoseidonSplashSprintBoon",
-	"AllCloseBoon",
-	"SteamBoon",
-	"MassiveCastBoon",
-	"DoubleSplashBoon",
-	"StormSpawnBoon",
-	"MaxHealthDamageBoon",
-	"BurnConsumeBoon",
-	"ClearRootBoon",
-	"SelfCastBoon",
-	"ManaBurstCountBoon",
-	"CoverRegenerationBoon",
-	"BlindClearBoon",
-	"DoubleSwordBoon",
-	"BurnRefreshBoon",
-	"SlamManaBurstBoon",
-	"BloodManaBurstBoon",
-	"DoubleMassiveAttackBoon",
-	"RapidSwordBoon",
-	"ManaRestoreDamageBoon",
-	"FireballRendBoon",
-}

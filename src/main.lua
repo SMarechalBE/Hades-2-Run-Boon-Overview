@@ -46,6 +46,7 @@ local function on_ready()
 	-- Enable Boon pinning from Melinoe BoonInfo page
 	game.CodexData.ChthonicGods.Entries.PlayerUnit["BoonInfoAllowPinning"] = true
 
+	import 'ordering.lua'
 	import 'ready.lua'
 end
 
