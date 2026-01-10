@@ -8,50 +8,66 @@ Melinoe =
 	CodexChapter = "ChthonicGods"
 }
 
----Retrieve all boons from "slot" gods encountered this run.
----@param traitList table
----@return table
-function GetGodPoolBoons(traitList)
-	if not traitList or not game.LootData then return traitList end
+---Retrieve all boons from GodLoot type gods that were encountered this run into a lookup table for naturally handling dupe values.
+---@param traitLookup table<string,boolean>?
+---@return table<string,boolean> traitLookup
+function GetGodPoolBoonsLookup(traitLookup)
+	traitLookup = traitLookup or {}
+
+	if game.CurrentHubRoom then return traitLookup end
+
+	local lootData = game.LootData
+	if not lootData then return traitLookup end
 
 	local godPool = game.GetInteractedGodsThisRun()
-	if not godPool then return traitList end
+	if not godPool then return traitLookup end
 
 	for _, god in ipairs(godPool) do
-		local godData = game.LootData[god]
+		local godData = lootData[god]
 		if godData and godData.GodLoot and godData.TraitIndex then
 			for traitName, _ in pairs(godData.TraitIndex) do
-				table.insert(traitList, traitName)
+				traitLookup[traitName] = true
 			end
 		end
 	end
 
-	return traitList
+	return traitLookup
 end
 
----Reorder the traitList using TraitOrder
----@param traitList table
----@return table
-function Reorder(traitList)
+---Reorder the traitList using TraitOrderLookup
+---@param traitList table<integer,string>
+---@param traitOrder table<string,table>
+---@return table<integer,string>
+function Reorder(traitList, traitOrder)
 	table.sort(traitList, function (traitA, traitB)
-		for _, traitName in ipairs(mod.TraitOrder) do
-			if traitName == traitA then
-				return true -- traitA < traitB
-			elseif traitName == traitB then
-				return false -- traitA > traitB
-			end
+		local orderA = traitOrder[traitA]
+		if not orderA then
+			modutil.mod.Print("Can't find ordering for "..traitA)
+			return false
 		end
-		return true -- We shouldn't get here
+
+		local orderB = traitOrder[traitB]
+		if not orderB then
+			modutil.mod.Print("Can't find ordering for "..traitB)
+			return true
+		end
+
+		if orderA.Slot ~= orderB.Slot then
+			return orderA.Slot < orderB.Slot
+		end
+
+		if orderA.PrimaryGod ~= orderB.PrimaryGod then
+			return orderA.PrimaryGod < orderB.PrimaryGod
+		end
+		
+		return orderA.SecondaryGod < orderB.SecondaryGod
 	end)
 
 	return traitList
 end
 
----Ensures the passed trait list is not empty.<br>
----If it is the case, then adds the best boon for safety reasons since the game crashes when it<br>
----tries to display an empty boon page.<br>
----Nonetheless, we should ideally try to prevent the user from opening the page if there's no<br>
----boon. For example, that could be controlled by not showing the trait button at all.
+---Ensures the passed trait list is not empty.
+---This is only done for safety purposes as the button appears only if there are boons to display 
 ---@param traitList table
 ---@return table
 function EnsureNotEmptyBoonList(traitList)
@@ -62,60 +78,42 @@ function EnsureNotEmptyBoonList(traitList)
 	return traitList
 end
 
----TODO: Add pinned boons to the list
----@param traitList table
----@return table
-function AddPinnedBoons(traitList)
-	return traitList
-end
+---Get pinned boons
+---@param traitLookup table<string,boolean>
+---@return table<string,boolean> traitLookup
+function GetPinnedBoonsLookup(traitLookup)
+	traitLookup = traitLookup or {}
 
----Dedupe traitList table
----TODO: perhaps it is not actually useful to dedupe, and we should instead build
----		 a lookup table directly with other functions. Meaning this would only convert
----		 it into a list instead.
----@param traitList table
----@return table
-function Dedupe(traitList)
-	-- Build a map using traits as keys to naturally dedupe
-	local traitTable = {}
-	for i=1, #traitList do
-		traitTable[traitList[i]] = true
+	local storeItemPins = game.GameState and game.GameState.StoreItemPins
+	if not storeItemPins then return traitLookup end
+
+	for _, pin in ipairs( storeItemPins ) do
+		if pin.StoreName == "TraitData" then
+			traitLookup[pin.Name] = true
+		end
 	end
 
-	-- Reconstruct the list from the table
-	local dedupedList = {}
-	for traitName, _ in pairs(traitTable) do
-		table.insert(dedupedList, traitName)
-	end
-
-	return dedupedList
+	return traitLookup
 end
 
----Called inside BoonInfoPopulateTraits override: Constructs the boon info list for Melinoe
----@param screen table
-function BoonInfoPopulateTraits_SetCurrentRunTraitList(screen)
-	screen.TraitList = {}
-	screen.TraitList = GetGodPoolBoons(screen.TraitList)
-	screen.TraitList = AddPinnedBoons(screen.TraitList)
-	screen.TraitList = Dedupe(screen.TraitList)
-	screen.TraitList = Reorder(screen.TraitList)
-	screen.TraitList = EnsureNotEmptyBoonList(screen.TraitList)
+local TraitOrderLookup = GetTraitOrderLookup()
+
+---Constructs the ordered boon list for Melinoe
+---@return table<string> boons
+function GetMelinoeTraits()
+	local traitList = game.KeysToList(GetPinnedBoonsLookup(GetGodPoolBoonsLookup()))
+	return EnsureNotEmptyBoonList(Reorder(traitList, TraitOrderLookup))
 end
 
----Wraps OpenCodexScreen: Add or remove traitDictionary["PlayerUnit"] (which controls boon offering button)
-function OpenCodexScreen_UpdateMelinoeBoonOfferingButton()
+---Add or remove Melinoe from traitDictionary to control the boon offering button presence in the Codex
+function UpdateCodexMelinoeBoonOfferingButton()
 	local traitDictionary = game.ScreenData and game.ScreenData.BoonInfo and game.ScreenData.BoonInfo.TraitDictionary
 	if not traitDictionary then return end
 
-	if not game.CurrentHubRoom -- We are in a run
-	   and game.TableLength(game.GetInteractedGodsThisRun()) > 0 then -- Gods were interacted with this run
-		traitDictionary[Melinoe.LootName] = {}
-	else -- Otherwise, make sure button is removed
-		traitDictionary[Melinoe.LootName] = nil
-	end
+	traitDictionary[Melinoe.LootName] = (game.TableLength(GetPinnedBoonsLookup(GetGodPoolBoonsLookup())) > 0) and {} or nil
 end
 
----Set Chtronic gods chapter as selected
+---Set Chtonic gods chapter as selected
 function SetDefaultCodexChapter()
 	if not game.CodexStatus.Enabled then
 		return
