@@ -5,7 +5,7 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "SMarBe"
 name = "Run_Boon_Overview"
-versionNumber = "1.1.0"
+versionNumber = "1.2.0"
 description = "Aggregates into Melinoe Codex page all currently available boons during a run"
 websiteUrl = "https://github.com/SMarechalBE/Hades-2-Run-Boon-Overview"
 containsNsfwContent = false
