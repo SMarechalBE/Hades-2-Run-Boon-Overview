@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Pinned boons are now shown directly in Melinoë's page. Those can make the button appear and thus the codex page accessible in 
+  hub rooms.
+
+### Changed
+
+- Improved ordering behaviour to dynamically handle innate slots and rarities. This should make this mod naturally compatible with any
+  mod adding new boons, ordering them in a natural way.
+
 ## [1.1.0] - 2025-12-29
 
 ### Added
